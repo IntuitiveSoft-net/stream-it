@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  nginx-rtmp:
+    build: nginx-rtmp
+    ports:
+      - "1935:1935"
+      - "8080:8080"
+      - "8088:8088"
+    environment:
+      - TZ=Europe/Paris
+
+  streamer:
+    build: stream
+    depends_on:
+      - nginx-rtmp
+    volumes:
+      - ./videos:/videos
+    environment:
+      - TZ=Europe/Paris
+
+    command: >
+      ffmpeg -stream_loop -1 -re -i /videos/BigBuckBunny_320x180.mp4 -utc_timing_url http://nginx-rtmp:8080/utc_timestamp
+      -c:v libx264 -c:a aac -f flv rtmp://nginx-rtmp:1935/live/stream
